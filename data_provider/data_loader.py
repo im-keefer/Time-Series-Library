@@ -821,7 +821,7 @@ class Dataset_EURUSD_minute(Dataset):
         
         if self.scale:
             train_data = open_values[border1s[0]:border2s[0]]
-            self.scaler.fit(train_data.values)
+            self.scaler.fit(train_data)
             data = self.scaler.transform(data.values)
 
         data_stamp = datetime_values[border1:border2]
