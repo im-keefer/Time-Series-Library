@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 from math import sqrt
 from utils.masking import TriangularCausalMask, ProbMask
-from reformer_pytorch import LSHSelfAttention
+#from reformer_pytorch import LSHSelfAttention
 from einops import rearrange, repeat
 
 
@@ -213,6 +213,7 @@ class AttentionLayer(nn.Module):
         return self.out_projection(out), attn
 
 
+'''
 class ReformerLayer(nn.Module):
     def __init__(self, attention, d_model, n_heads, d_keys=None,
                  d_values=None, causal=False, bucket_size=4, n_hashes=4):
@@ -241,6 +242,7 @@ class ReformerLayer(nn.Module):
         B, N, C = queries.shape
         queries = self.attn(self.fit_length(queries))[:, :N, :]
         return queries, None
+'''
 
 
 class TwoStageAttentionLayer(nn.Module):
