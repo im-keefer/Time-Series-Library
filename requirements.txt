@@ -2,3 +2,4 @@ einops
 patool
 sktime
 tdqm
+sympy
