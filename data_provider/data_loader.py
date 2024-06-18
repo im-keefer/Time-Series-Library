@@ -5,7 +5,7 @@ import glob
 import re
 import torch
 from torch.utils.data import Dataset, DataLoader
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from utils.timefeatures import time_features
 from data_provider.m4 import M4Dataset, M4Meta
 from data_provider.uea import subsample, interpolate_missing, Normalizer
@@ -746,3 +746,99 @@ class UEAloader(Dataset):
 
     def __len__(self):
         return len(self.all_IDs)
+
+class Dataset_EURUSD_minute(Dataset):
+    def __init__(self, args, root_path, flag='train', size=None, data_path=None, target='open', scale=True, timeenc=0, freq='t', seasonal_patterns=None):
+        self.args = args
+        # info
+        if size == None:
+            self.seq_len = 24 * 4 * 4
+            self.label_len = 24 * 4
+            self.pred_len = 24 * 4
+        else:
+            self.seq_len = size[0]
+            self.label_len = size[1]
+            self.pred_len = size[2]
+        # init
+        assert flag in ['train', 'test', 'val']
+        type_map = {'train': 0, 'val': 1, 'test': 2}
+        self.set_type = type_map[flag]
+
+        #self.features = features
+        self.target = target
+        self.scale = scale
+        self.timeenc = timeenc
+        self.freq = freq
+
+        self.root_path = root_path
+        self.data_path = data_path
+        self.__read_data__()
+
+    def __read_data__(self):
+        self.scaler = MinMaxScaler()
+        data = pd.read_csv(os.path.join(self.root_path,
+                                          self.data_path), skiprows=1, header=None)
+        #The lambda function converts each value x in the 'TIME' column to an integer
+        # and then formats it as a zero-padded 6-digit string. For example, if x is 930, it becomes 000930.
+        data['TIME'] = data['TIME'].apply(lambda x: f'{int(x):06d}')
+        data['DATETIME'] = pd.to_datetime(data['DTYYYYMMDD'].astype(str) + data['TIME'], format='%Y%m%d%H%M%S')
+
+        # Convert int
+        data['DATETIME'] = (data['DATETIME'].astype(np.int64) // 10**9)
+
+        # Check for unique timestamps
+        unique_timestamps = data['DATETIME'].nunique()
+        total_timestamps = len(data)
+        print(f"Unique Timestamps: {unique_timestamps}, Total Rows: {total_timestamps}")
+
+        print(data['DATETIME'].head())
+
+        # Check for unique timestamps
+        unique_timestamps = data['DATETIME'].nunique()
+        total_timestamps = len(data)
+        print(f"Unique Timestamps: {unique_timestamps}, Total Rows: {total_timestamps}")
+
+        # Select the columns to normalize
+        columns_to_normalize = ['OPEN', 'HIGH', 'LOW', 'CLOSE', 'VOL']
+
+        # Sequence into train/val/test
+
+        # Extract 'OPEN' and 'DATETIME' columns
+        open_values = data['OPEN'].values
+        datetime_values = data['DATETIME'].values
+        num_sequences = len(data) - input_sequence_size - target_sequence_size + 1
+
+        # Preallocate arrays for input sequences and datetime sequences
+        self.input_sequences = np.empty((num_sequences, input_sequence_size), dtype=np.float32)
+        self.target_sequences = np.empty((num_sequences, target_sequence_size), dtype=np.float32)
+        self.datetime_sequences = np.empty((num_sequences, input_sequence_size), dtype=np.int64)
+
+        for i in range(num_sequences):
+            self.input_sequences[i] = open_values[i:i + input_sequence_size]
+            self.target_sequences[i] = open_values[i + input_sequence_size:i + input_sequence_size + target_sequence_size]
+            self.datetime_sequences[i] = datetime_values[i:i + input_sequence_size]
+
+        # Scale the Sequences
+        if self.scale:
+            self.input_sequences = minmax_scaler.fit_transform(input_sequences)
+            self.target_sequences = minmax_scaler.fit_transform(target_sequences)
+            self.datetime_sequences = minmax_scaler.fit_transform(datetime_sequences)
+
+    def __getitem__(self, index):
+        s_begin = index
+        s_end = s_begin + self.seq_len
+        r_begin = s_end - self.label_len
+        r_end = r_begin + self.label_len + self.pred_len
+
+        seq_x = self.input_sequences[s_begin:s_end]
+        seq_y = self.target_sequences[r_begin:r_end]
+        seq_x_mark = self.datetime_sequences[s_begin:s_end]
+        seq_y_mark = self.datetime_sequences[r_begin:r_end]
+
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
+
+    def __len__(self):
+        return len(self.data_x) - self.seq_len - self.pred_len + 1
+
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
