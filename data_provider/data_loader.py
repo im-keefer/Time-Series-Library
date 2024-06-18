@@ -748,7 +748,7 @@ class UEAloader(Dataset):
         return len(self.all_IDs)
 
 class Dataset_EURUSD_minute(Dataset):
-    def __init__(self, args, root_path, flag='train', size=None, data_path=None, target='open', scale=True, timeenc=0, freq='t', seasonal_patterns=None):
+    def __init__(self, args, root_path, flag='train', size=None, data_path=None, target='open', scale=True, timeenc=0, freq='t', seasonal_patterns=None, features=None):
         self.args = args
         # info
         if size == None:
