@@ -827,13 +827,14 @@ class Dataset_EURUSD_minute(Dataset):
             self.datetime_sequences = self.scaler.fit_transform(self.datetime_sequences)
 
     def __getitem__(self, index):
+        print(index)
         seq_x = self.input_sequences[index]
         seq_y = self.target_sequences[index]
         seq_x_mark = self.datetime_sequences[index]
         seq_y_mark = self.datetime_sequences[index]
 
-        print(seq_x.shape)
-        print(seq_y.shape)
+        #print(seq_x.shape)
+        #print(seq_y.shape)
 
         return seq_x, seq_y, seq_x_mark, seq_y_mark
 
