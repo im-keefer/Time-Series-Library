@@ -2,4 +2,4 @@ einops
 patool
 sktime
 tdqm
-sympy
+mamba_ssm
