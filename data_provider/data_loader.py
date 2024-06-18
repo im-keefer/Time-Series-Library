@@ -810,36 +810,42 @@ class Dataset_EURUSD_minute(Dataset):
         datetime_values = data['DATETIME'].values
         num_sequences = len(data) - self.seq_len - self.pred_len + 1
 
-        # Preallocate arrays for input sequences and datetime sequences
-        self.input_sequences = np.empty((num_sequences, self.seq_len), dtype=np.float32)
-        self.target_sequences = np.empty((num_sequences, self.pred_len), dtype=np.float32)
-        self.datetime_sequences = np.empty((num_sequences, self.seq_len), dtype=np.int64)
+        num_train = int(len(data) * 0.7)
+        num_test = int(len(data) * 0.2)
+        num_vali = len(data) - num_train - num_test
 
-        for i in range(num_sequences):
-            self.input_sequences[i] = open_values[i:i + self.seq_len]
-            self.target_sequences[i] = open_values[i + self.seq_len:i + self.seq_len + self.pred_len]
-            self.datetime_sequences[i] = datetime_values[i:i + self.seq_len]
-
-        # Scale the Sequences
+        border1s = [0, num_train - self.seq_len, len(data) - num_test - self.seq_len]
+        border2s = [num_train, num_train + num_vali, len(data)]
+        border1 = border1s[self.set_type]
+        border2 = border2s[self.set_type]
+        
         if self.scale:
-            self.input_sequences = self.scaler.fit_transform(self.input_sequences)
-            self.target_sequences = self.scaler.fit_transform(self.target_sequences)
-            self.datetime_sequences = self.scaler.fit_transform(self.datetime_sequences)
+            train_data = open_values[border1s[0]:border2s[0]]
+            self.scaler.fit(train_data.values)
+            data = self.scaler.transform(data.values)
+
+        data_stamp = datetime_values[border1:border2]
+
+        self.data_x = open_values[border1:border2]
+        self.data_y = open_values[border1:border2]
+
+        self.data_stamp = data_stamp
 
     def __getitem__(self, index):
-        print(index)
-        seq_x = self.input_sequences[index]
-        seq_y = self.target_sequences[index]
-        seq_x_mark = self.datetime_sequences[index]
-        seq_y_mark = self.datetime_sequences[index]
+        s_begin = index
+        s_end = s_begin + self.seq_len
+        r_begin = s_end - self.label_len
+        r_end = r_begin + self.label_len + self.pred_len
 
-        #print(seq_x.shape)
-        #print(seq_y.shape)
+        seq_x = self.data_x[s_begin:s_end]
+        seq_y = self.data_y[r_begin:r_end]
+        seq_x_mark = self.data_stamp[s_begin:s_end]
+        seq_y_mark = self.data_stamp[r_begin:r_end]
 
         return seq_x, seq_y, seq_x_mark, seq_y_mark
 
     def __len__(self):
-        return len(self.input_sequences) - self.seq_len - self.pred_len + 1
+        return len(self.data_x) - self.seq_len - self.pred_len + 1
 
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
