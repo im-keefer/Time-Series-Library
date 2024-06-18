@@ -808,23 +808,23 @@ class Dataset_EURUSD_minute(Dataset):
         # Extract 'OPEN' and 'DATETIME' columns
         open_values = data['OPEN'].values
         datetime_values = data['DATETIME'].values
-        num_sequences = len(data) - input_sequence_size - target_sequence_size + 1
+        num_sequences = len(data) - self.seq_len - self.pred_len + 1
 
         # Preallocate arrays for input sequences and datetime sequences
-        self.input_sequences = np.empty((num_sequences, input_sequence_size), dtype=np.float32)
-        self.target_sequences = np.empty((num_sequences, target_sequence_size), dtype=np.float32)
-        self.datetime_sequences = np.empty((num_sequences, input_sequence_size), dtype=np.int64)
+        self.input_sequences = np.empty((num_sequences, self.seq_len), dtype=np.float32)
+        self.target_sequences = np.empty((num_sequences, self.pred_len), dtype=np.float32)
+        self.datetime_sequences = np.empty((num_sequences, self.seq_len), dtype=np.int64)
 
         for i in range(num_sequences):
-            self.input_sequences[i] = open_values[i:i + input_sequence_size]
-            self.target_sequences[i] = open_values[i + input_sequence_size:i + input_sequence_size + target_sequence_size]
-            self.datetime_sequences[i] = datetime_values[i:i + input_sequence_size]
+            self.input_sequences[i] = open_values[i:i + self.seq_len]
+            self.target_sequences[i] = open_values[i + self.seq_len:i + self.seq_len + self.pred_len]
+            self.datetime_sequences[i] = datetime_values[i:i + self.seq_len]
 
         # Scale the Sequences
         if self.scale:
-            self.input_sequences = minmax_scaler.fit_transform(input_sequences)
-            self.target_sequences = minmax_scaler.fit_transform(target_sequences)
-            self.datetime_sequences = minmax_scaler.fit_transform(datetime_sequences)
+            self.input_sequences = self.scaler.fit_transform(self.input_sequences)
+            self.target_sequences = self.scaler.fit_transform(self.target_sequences)
+            self.datetime_sequences = self.scaler.fit_transform(self.datetime_sequences)
 
     def __getitem__(self, index):
         s_begin = index
