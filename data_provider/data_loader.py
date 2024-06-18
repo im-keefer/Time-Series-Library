@@ -776,8 +776,10 @@ class Dataset_EURUSD_minute(Dataset):
 
     def __read_data__(self):
         self.scaler = MinMaxScaler()
-        data = pd.read_csv(os.path.join(self.root_path,
-                                          self.data_path), skiprows=1, header=None)
+        data = pd.read_csv(os.path.join(self.root_path, self.data_path), skiprows=1, header=None)
+        # TODO: Remove when data format is standardized
+        data.columns = ['<TICKER>', '<DTYYYYMMDD>', '<TIME>', '<OPEN>', '<HIGH>', '<LOW>', '<CLOSE>', '<VOL>']
+        data.columns = [col.strip('<>') for col in data.columns]
         #The lambda function converts each value x in the 'TIME' column to an integer
         # and then formats it as a zero-padded 6-digit string. For example, if x is 930, it becomes 000930.
         data['TIME'] = data['TIME'].apply(lambda x: f'{int(x):06d}')
