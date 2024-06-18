@@ -764,7 +764,7 @@ class Dataset_EURUSD_minute(Dataset):
         type_map = {'train': 0, 'val': 1, 'test': 2}
         self.set_type = type_map[flag]
 
-        #self.features = features
+        self.features = features
         self.target = target
         self.scale = scale
         self.timeenc = timeenc
@@ -776,58 +776,63 @@ class Dataset_EURUSD_minute(Dataset):
 
     def __read_data__(self):
         self.scaler = MinMaxScaler()
-        data = pd.read_csv(os.path.join(self.root_path, self.data_path), skiprows=1, header=None)
+        data_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
         # TODO: Remove when data format is standardized
-        data.columns = ['<TICKER>', '<DTYYYYMMDD>', '<TIME>', '<OPEN>', '<HIGH>', '<LOW>', '<CLOSE>', '<VOL>']
-        data.columns = [col.strip('<>') for col in data.columns]
+        #data_raw.columns = ['TICKER', 'DTYYYYMMDD', 'TIME', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'VOL']
+        #data_raw.columns = [col.strip('<>') for col in data_raw.columns]
         #The lambda function converts each value x in the 'TIME' column to an integer
         # and then formats it as a zero-padded 6-digit string. For example, if x is 930, it becomes 000930.
-        data['TIME'] = data['TIME'].apply(lambda x: f'{int(x):06d}')
-        data['DATETIME'] = pd.to_datetime(data['DTYYYYMMDD'].astype(str) + data['TIME'], format='%Y%m%d%H%M%S')
+        data_raw['TIME'] = data_raw['TIME'].apply(lambda x: f'{int(x):06d}')
+        data_raw['DATETIME'] = pd.to_datetime(data_raw['DTYYYYMMDD'].astype(str) + data_raw['TIME'], format='%Y%m%d%H%M%S')
 
         # Convert int
-        data['DATETIME'] = (data['DATETIME'].astype(np.int64) // 10**9)
+        data_raw['date'] = (data_raw['DATETIME'].astype(np.int64) // 10**9)
 
         # Check for unique timestamps
-        unique_timestamps = data['DATETIME'].nunique()
-        total_timestamps = len(data)
+        unique_timestamps = data_raw['date'].nunique()
+        total_timestamps = len(data_raw)
         print(f"Unique Timestamps: {unique_timestamps}, Total Rows: {total_timestamps}")
 
-        print(data['DATETIME'].head())
+        print(data_raw['date'].head())
 
         # Check for unique timestamps
-        unique_timestamps = data['DATETIME'].nunique()
-        total_timestamps = len(data)
+        unique_timestamps = data_raw['date'].nunique()
+        total_timestamps = len(data_raw)
         print(f"Unique Timestamps: {unique_timestamps}, Total Rows: {total_timestamps}")
 
-        # Select the columns to normalize
-        columns_to_normalize = ['OPEN', 'HIGH', 'LOW', 'CLOSE', 'VOL']
+        cols = list(data_raw.columns)
+        cols.remove(self.target)
+        cols.remove('date')
+
+        print
+        data_raw = data_raw[['date'] + cols + [self.target]]
 
         # Sequence into train/val/test
-
-        # Extract 'OPEN' and 'DATETIME' columns
-        open_values = data['OPEN'].values
-        datetime_values = data['DATETIME'].values
-        num_sequences = len(data) - self.seq_len - self.pred_len + 1
-
-        num_train = int(len(data) * 0.7)
-        num_test = int(len(data) * 0.2)
-        num_vali = len(data) - num_train - num_test
-
-        border1s = [0, num_train - self.seq_len, len(data) - num_test - self.seq_len]
-        border2s = [num_train, num_train + num_vali, len(data)]
+        num_train = int(len(data_raw) * 0.7)
+        num_test = int(len(data_raw) * 0.2)
+        num_vali = len(data_raw) - num_train - num_test
+        border1s = [0, num_train - self.seq_len, len(data_raw) - num_test - self.seq_len]
+        border2s = [num_train, num_train + num_vali, len(data_raw)]
         border1 = border1s[self.set_type]
         border2 = border2s[self.set_type]
-        
+
+        if self.features == 'T': # Minute
+            data = data_raw[[self.target]]
+
         if self.scale:
-            train_data = open_values[border1s[0]:border2s[0]]
-            self.scaler.fit(train_data.reshape(-1, 1))
-            data = self.scaler.transform(open_values)
+            train_data = data[border1s[0]:border2s[0]]
+            self.scaler.fit(train_data.values)
+            data = self.scaler.transform(data.values)
 
-        data_stamp = datetime_values[border1:border2]
+        data_stamp = data_raw[['date']][border1:border2]
+        data_stamp = time_features(pd.to_datetime(data_stamp['date'].values), freq=self.freq)
+        data_stamp = data_stamp.transpose(1, 0)
 
-        self.data_x = open_values[border1:border2]
-        self.data_y = open_values[border1:border2]
+        self.data_x = data[border1:border2]
+        self.data_y = data[border1:border2]
+
+        print(self.data_x.shape)
+        print(self.data_y.shape)
 
         self.data_stamp = data_stamp
 

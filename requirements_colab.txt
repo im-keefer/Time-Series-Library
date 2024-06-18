@@ -1,0 +1,5 @@
+einops
+patool
+sktime
+tdqm
+mamba_ssm
