@@ -832,6 +832,9 @@ class Dataset_EURUSD_minute(Dataset):
         seq_x_mark = self.datetime_sequences[index]
         seq_y_mark = self.datetime_sequences[index]
 
+        print(seq_x.shape)
+        print(seq_y.shape)
+
         return seq_x, seq_y, seq_x_mark, seq_y_mark
 
     def __len__(self):
