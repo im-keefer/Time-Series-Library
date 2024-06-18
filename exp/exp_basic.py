@@ -17,7 +17,6 @@ class Exp_Basic(object):
             'FEDformer': FEDformer,
             'Informer': Informer,
             'LightTS': LightTS,
-            'Reformer': Reformer,
             'ETSformer': ETSformer,
             'PatchTST': PatchTST,
             'Pyraformer': Pyraformer,
