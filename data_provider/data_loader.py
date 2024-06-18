@@ -831,9 +831,6 @@ class Dataset_EURUSD_minute(Dataset):
         self.data_x = data[border1:border2]
         self.data_y = data[border1:border2]
 
-        print(self.data_x.shape)
-        print(self.data_y.shape)
-
         self.data_stamp = data_stamp
 
     def __getitem__(self, index):
