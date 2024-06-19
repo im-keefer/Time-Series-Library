@@ -225,7 +225,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         outputs = test_data.inverse_transform(outputs.squeeze(0)).reshape(shape)
                         batch_y = test_data.inverse_transform(batch_y.squeeze(0)).reshape(shape)
                     else: # We have multiple batches, inverse them all why not
-                        for i in range(len(shape[0])):
+                        for i in range(shape[0]):
                             outputs[i] = test_data.inverse_transform(outputs[i].squeeze(0)).reshape(shape)
                             batch_y[i] = test_data.inverse_transform(batch_y[i].squeeze(0)).reshape(shape)
         
