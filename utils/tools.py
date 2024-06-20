@@ -91,6 +91,21 @@ def visual(true, preds=None, name='./pic/test.pdf'):
     plt.legend()
     plt.savefig(name, bbox_inches='tight')
 
+def loss_visual(train_loss, val_loss, name='./pic/test.pdf'):
+    """
+    Results visualization
+    """
+    plt.figure()
+    plt.title('Training and Validation Loss Over Epochs')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.yscale('Log')
+    plt.plot(train_loss, label='Training Loss', marker='o')
+    plt.plot(val_loss, label='Validation Loss', marker='o')
+    plt.legend()
+    plt.show()
+    plt.savefig(name, bbox_inches='tight')
+
 
 def adjustment(gt, pred):
     anomaly_state = False

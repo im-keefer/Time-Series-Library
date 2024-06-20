@@ -82,6 +82,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         train_data, train_loader = self._get_data(flag='train')
         vali_data, vali_loader = self._get_data(flag='val')
         test_data, test_loader = self._get_data(flag='test')
+        train_loss_pts = []
+        val_loss_pts = []
 
         path = os.path.join(self.args.checkpoints, setting)
         if not os.path.exists(path):
@@ -164,6 +166,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
+            train_loss_pts.append(train_loss)
+            val_loss_pts.append(vali_loss)
             early_stopping(vali_loss, self.model, path)
             if early_stopping.early_stop:
                 print("Early stopping")
@@ -173,6 +177,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         best_model_path = path + '/' + 'checkpoint.pth'
         self.model.load_state_dict(torch.load(best_model_path))
+
+        # Plot training and validation loss
+        folder_path = './test_results/' + setting + '/'
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+        loss_visual(train_loss_pts, val_loss_pts, os.path.join(folder_path, 'loss_plot.pdf'))
 
         return self.model
 
