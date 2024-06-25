@@ -833,6 +833,239 @@ class Dataset_EURUSD_minute(Dataset):
             data_stamp = data_stamp.transpose(1, 0)
         else:
             # Slightly Fudge the embedding since we work on a smaller timescale
+            data_stamp['date'] = pd.to_datetime(data_stamp.date)
+            data_stamp['minute'] = data_stamp.date.apply(lambda row: row.minute, 1)
+            data_stamp['hour'] = data_stamp.date.apply(lambda row: row.hour, 1)
+            data_stamp['day'] = data_stamp.date.apply(lambda row: row.day, 1)
+            data_stamp['weekday'] = data_stamp.date.apply(lambda row: row.weekday(), 1)
+            data_stamp['month'] = data_stamp.date.apply(lambda row: row.month, 1)
+            data_stamp = data_stamp.drop(['date'], axis=1).values
+
+        self.data_x = data[border1:border2]
+        self.data_y = data[border1:border2]
+
+        self.data_stamp = data_stamp
+
+    def __getitem__(self, index):
+        s_begin = index
+        s_end = s_begin + self.seq_len
+        r_begin = s_end - self.label_len
+        r_end = r_begin + self.label_len + self.pred_len
+
+        seq_x = self.data_x[s_begin:s_end]
+        seq_y = self.data_y[r_begin:r_end]
+        seq_x_mark = self.data_stamp[s_begin:s_end]
+        seq_y_mark = self.data_stamp[r_begin:r_end]
+
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
+
+    def __len__(self):
+        return len(self.data_x) - self.seq_len - self.pred_len + 1
+
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
+
+class Dataset_NASDAQ_minute(Dataset):
+    def __init__(self, args, root_path, flag='train', size=None, data_path=None, target='open', scale=True, timeenc=0, freq='t', seasonal_patterns=None, features=None):
+        self.args = args
+        # info
+        if size == None:
+            self.seq_len = 24 * 4 * 4
+            self.label_len = 24 * 4
+            self.pred_len = 24 * 4
+        else:
+            self.seq_len = size[0]
+            self.label_len = size[1]
+            self.pred_len = size[2]
+        # init
+        assert flag in ['train', 'test', 'val']
+        type_map = {'train': 0, 'val': 1, 'test': 2}
+        self.set_type = type_map[flag]
+
+        self.features = features
+        self.target = target
+        self.scale = scale
+        self.timeenc = timeenc
+        self.freq = freq
+
+        self.root_path = root_path
+        self.data_path = data_path
+        self.__read_data__()
+
+    def __read_data__(self):
+        self.scaler = StandardScaler()
+        data_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
+        #The lambda function converts each value x in the 'TIME' column to an integer
+        # and then formats it as a zero-padded 6-digit string. For example, if x is 930, it becomes 000930.
+        #data_raw['TIME'] = data_raw['TIME'].apply(lambda x: f'{int(x):06d}')
+        #data_raw['DATETIME'] = pd.to_datetime(data_raw['DTYYYYMMDD'].astype(str) + data_raw['TIME'], format='%Y%m%d%H%M%S')
+
+        # Convert int
+        #data_raw['date'] = (data_raw['DATETIME'].astype(np.int64) // 10**9)
+        data_raw['date'] = pd.to_datetime(data_raw['Local time'].astype(str), format="%d.%m.%Y %H:%M:%S.%f GMT%z")
+
+        # Check for unique timestamps
+        unique_timestamps = data_raw['date'].nunique()
+        total_timestamps = len(data_raw)
+        print(f"Unique Timestamps: {unique_timestamps}, Total Rows: {total_timestamps}")
+
+        print(data_raw['date'].head())
+
+        # Check for unique timestamps
+        unique_timestamps = data_raw['date'].nunique()
+        total_timestamps = len(data_raw)
+        print(f"Unique Timestamps: {unique_timestamps}, Total Rows: {total_timestamps}")
+
+        cols = list(data_raw.columns)
+        cols.remove(self.target)
+        cols.remove('date')
+
+        data_raw = data_raw[['date'] + cols + [self.target]]
+
+        # Sequence into train/val/test
+        num_train = int(len(data_raw) * 0.7)
+        num_test = int(len(data_raw) * 0.2)
+        num_vali = len(data_raw) - num_train - num_test
+        border1s = [0, num_train - self.seq_len, len(data_raw) - num_test - self.seq_len]
+        border2s = [num_train, num_train + num_vali, len(data_raw)]
+        border1 = border1s[self.set_type]
+        border2 = border2s[self.set_type]
+
+        if self.features == 'T': # Minute
+            data_f = data_raw[[self.target]]
+
+        if self.scale:
+            train_data = data_f[border1s[0]:border2s[0]]
+            self.scaler.fit(train_data.values)
+            data = self.scaler.transform(data_f.values)
+        else:
+            data = data_f.values
+
+        data_stamp = data_raw[['date']][border1:border2]
+        #data_stamp['date'] = pd.to_datetime(data_stamp.date)
+        
+        if self.timeenc == 1:
+            data_stamp = time_features(pd.to_datetime(data_stamp['date'].values), freq=self.freq)
+            data_stamp = data_stamp.transpose(1, 0)
+        else:
+            # Slightly Fudge the embedding since we work on a smaller timescale
+            #data_stamp['date'] = pd.to_datetime(data_stamp.date)
+            data_stamp['minute'] = data_stamp.date.apply(lambda row: row.minute, 1)
+            data_stamp['hour'] = data_stamp.date.apply(lambda row: row.hour, 1)
+            data_stamp['day'] = data_stamp.date.apply(lambda row: row.day, 1)
+            data_stamp['weekday'] = data_stamp.date.apply(lambda row: row.weekday(), 1)
+            data_stamp['month'] = data_stamp.date.apply(lambda row: row.month, 1)
+            data_stamp = data_stamp.drop(['date'], axis=1).values
+
+        self.data_x = data[border1:border2]
+        self.data_y = data[border1:border2]
+
+        self.data_stamp = data_stamp
+
+    def __getitem__(self, index):
+        s_begin = index
+        s_end = s_begin + self.seq_len
+        r_begin = s_end - self.label_len
+        r_end = r_begin + self.label_len + self.pred_len
+
+        seq_x = self.data_x[s_begin:s_end]
+        seq_y = self.data_y[r_begin:r_end]
+        seq_x_mark = self.data_stamp[s_begin:s_end]
+        seq_y_mark = self.data_stamp[r_begin:r_end]
+
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
+
+    def __len__(self):
+        return len(self.data_x) - self.seq_len - self.pred_len + 1
+
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
+
+class Dataset_Gold_minute(Dataset):
+    def __init__(self, args, root_path, flag='train', size=None, data_path=None, target='open', scale=True, timeenc=0, freq='t', seasonal_patterns=None, features=None):
+        self.args = args
+        # info
+        if size == None:
+            self.seq_len = 24 * 4 * 4
+            self.label_len = 24 * 4
+            self.pred_len = 24 * 4
+        else:
+            self.seq_len = size[0]
+            self.label_len = size[1]
+            self.pred_len = size[2]
+        # init
+        assert flag in ['train', 'test', 'val']
+        type_map = {'train': 0, 'val': 1, 'test': 2}
+        self.set_type = type_map[flag]
+
+        self.features = features
+        self.target = target
+        self.scale = scale
+        self.timeenc = timeenc
+        self.freq = freq
+
+        self.root_path = root_path
+        self.data_path = data_path
+        self.__read_data__()
+
+    def __read_data__(self):
+        self.scaler = StandardScaler()
+        data_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
+        #The lambda function converts each value x in the 'TIME' column to an integer
+        # and then formats it as a zero-padded 6-digit string. For example, if x is 930, it becomes 000930.
+        #data_raw['TIME'] = data_raw['TIME'].apply(lambda x: f'{int(x):06d}')
+        #data_raw['DATETIME'] = pd.to_datetime(data_raw['DTYYYYMMDD'].astype(str) + data_raw['TIME'], format='%Y%m%d%H%M%S')
+
+        # Convert int
+        #data_raw['date'] = (data_raw['DATETIME'].astype(np.int64) // 10**9)
+        data_raw['date'] = pd.to_datetime(data_raw['Date'].astype(str) + data_raw['Time'].astype(str), format="%Y.%m.%d%H:%M")
+
+        # Check for unique timestamps
+        unique_timestamps = data_raw['date'].nunique()
+        total_timestamps = len(data_raw)
+        print(f"Unique Timestamps: {unique_timestamps}, Total Rows: {total_timestamps}")
+
+        print(data_raw['date'].head())
+
+        # Check for unique timestamps
+        unique_timestamps = data_raw['date'].nunique()
+        total_timestamps = len(data_raw)
+        print(f"Unique Timestamps: {unique_timestamps}, Total Rows: {total_timestamps}")
+
+        cols = list(data_raw.columns)
+        cols.remove(self.target)
+        cols.remove('date')
+
+        data_raw = data_raw[['date'] + cols + [self.target]]
+
+        # Sequence into train/val/test
+        num_train = int(len(data_raw) * 0.7)
+        num_test = int(len(data_raw) * 0.2)
+        num_vali = len(data_raw) - num_train - num_test
+        border1s = [0, num_train - self.seq_len, len(data_raw) - num_test - self.seq_len]
+        border2s = [num_train, num_train + num_vali, len(data_raw)]
+        border1 = border1s[self.set_type]
+        border2 = border2s[self.set_type]
+
+        if self.features == 'T': # Minute
+            data_f = data_raw[[self.target]]
+
+        if self.scale:
+            train_data = data_f[border1s[0]:border2s[0]]
+            self.scaler.fit(train_data.values)
+            data = self.scaler.transform(data_f.values)
+        else:
+            data = data_f.values
+
+        data_stamp = data_raw[['date']][border1:border2]
+        #data_stamp['date'] = pd.to_datetime(data_stamp.date)
+        
+        if self.timeenc == 1:
+            data_stamp = time_features(pd.to_datetime(data_stamp['date'].values), freq=self.freq)
+            data_stamp = data_stamp.transpose(1, 0)
+        else:
+            # Slightly Fudge the embedding since we work on a smaller timescale
+            #data_stamp['date'] = pd.to_datetime(data_stamp.date)
             data_stamp['minute'] = data_stamp.date.apply(lambda row: row.minute, 1)
             data_stamp['hour'] = data_stamp.date.apply(lambda row: row.hour, 1)
             data_stamp['day'] = data_stamp.date.apply(lambda row: row.day, 1)

@@ -85,9 +85,9 @@ def visual(true, preds=None, name='./pic/test.pdf'):
     plt.figure()
     plt.xlabel('Time Steps')
     plt.ylabel('Value')
-    x_input = range((len(true)-1)//2)
+    x_input = range((len(true))//2)
     x_target = range(len(true)//2, len(true))
-    plt.plot(x_input, true[:(len(true)//2)-1], label='Input Sequence', linewidth=2)
+    plt.plot(x_input, true[:(len(true)//2)], label='Input Sequence', linewidth=2)
     plt.plot(x_target, true[len(true)//2:], label='Output Sequence', linewidth=2)
     #plot.plot(true, label='Ground Truth', linewidth=2)
     if preds is not None:

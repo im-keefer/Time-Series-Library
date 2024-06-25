@@ -180,18 +180,18 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         self.model.load_state_dict(torch.load(best_model_path))
 
         # Plot training and validation loss
-        folder_path = './test_results/' + setting + '/'
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+        self.folder_path = './test_results/' + setting + '/'
+        if not os.path.exists(self.folder_path):
+            os.makedirs(self.folder_path)
         else: # Force output into new folder
             i = 1
-            folder_path = './test_results/' + setting + str(i) + '/'
-            while os.path.exists(folder_path):
+            self.folder_path = './test_results/' + setting + str(i) + '/'
+            while os.path.exists(self.folder_path):
                 i = i + 1
-                folder_path = './test_results/' + setting + str(i) + '/'
-            os.makedirs(folder_path)
+                self.folder_path = './test_results/' + setting + str(i) + '/'
+            os.makedirs(self.folder_path)
 
-        loss_visual(train_loss_pts, val_loss_pts, os.path.join(folder_path, 'loss_plot.pdf'))
+        loss_visual(train_loss_pts, val_loss_pts, os.path.join(self.folder_path, 'loss_plot.pdf'))
 
         return self.model
 
@@ -203,9 +203,9 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         preds = []
         trues = []
-        folder_path = './test_results/' + setting + '/'
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+        #folder_path = './test_results/' + setting + '/'
+        if not os.path.exists(self.folder_path):
+            os.makedirs(self.folder_path)
 
         self.model.eval()
         batch_mse = []
@@ -273,7 +273,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                                 input[j] = test_data.inverse_transform(input[j]).reshape(input[j].shape)
                     gt = np.concatenate((input[0, :, -1], true[0, :, -1]), axis=0)
                     pd = np.concatenate((input[0, :, -1], pred[0, :, -1]), axis=0)
-                    visual(gt, pd, os.path.join(folder_path, str(i) + '.pdf'))
+                    visual(gt, pd, os.path.join(self.folder_path, str(i) + '.pdf'))
 
         preds = np.array(preds)
         trues = np.array(trues)
@@ -281,18 +281,6 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
         print('test shape:', preds.shape, trues.shape)
-
-        # result save
-        folder_path = './results/' + setting + '/'
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-        else: # Force output into new folder
-            i = 1
-            folder_path = './test_results/' + setting + str(i) + '/'
-            while os.path.exists(folder_path):
-                i = i + 1
-                folder_path = './test_results/' + setting + str(i) + '/'
-            os.makedirs(folder_path)
         
         # dtw calculation
         if self.args.use_dtw:
@@ -319,13 +307,13 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         f.write('\n')
         f.close()
 
-        f = open(folder_path + "loss_into_day.csv", 'w', newline='')
+        f = open(self.folder_path + "loss_into_day.csv", 'w', newline='')
         writer = csv.writer(f)
         writer.writerows(batch_mse)
         f.close()
 
-        np.save(folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe]))
-        np.save(folder_path + 'pred.npy', preds)
-        np.save(folder_path + 'true.npy', trues)
+        np.save(self.folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe]))
+        np.save(self.folder_path + 'pred.npy', preds)
+        np.save(self.folder_path + 'true.npy', trues)
 
         return
