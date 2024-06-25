@@ -85,9 +85,14 @@ def visual(true, preds=None, name='./pic/test.pdf'):
     plt.figure()
     plt.xlabel('Time Steps')
     plt.ylabel('Value')
-    plt.plot(true, label='GroundTruth', linewidth=2)
+    x_input = range((len(true)-1)//2)
+    x_target = range(len(true)//2, len(true))
+    plt.plot(x_input, true[:(len(true)//2)-1], label='Input Sequence', linewidth=2)
+    plt.plot(x_target, true[len(true)//2:], label='Output Sequence', linewidth=2)
+    #plot.plot(true, label='Ground Truth', linewidth=2)
     if preds is not None:
-        plt.plot(preds, label='Prediction', linewidth=2)
+        plt.plot(x_target, preds[len(preds)//2:], label='Prediction', linewidth=2)
+        #plt.plot(preds, label='Prediction', linewidth=2)
     plt.legend()
     plt.savefig(name, bbox_inches='tight')
 
@@ -99,11 +104,26 @@ def loss_visual(train_loss, val_loss, name='./pic/test.pdf'):
     plt.title('Training and Validation Loss Over Epochs')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.yscale('Log')
+    plt.yscale('log')
     plt.plot(train_loss, label='Training Loss', marker='o')
     plt.plot(val_loss, label='Validation Loss', marker='o')
     plt.legend()
     plt.show()
+    plt.savefig(name, bbox_inches='tight')
+
+def day_visual(sorted_seconds_in_day, sorted_sequence_loss, name='./pic/test.pdf'):
+    """
+    Results visualization
+    """
+    plt.figure(figsize=(10, 6))
+    plt.plot(sorted_seconds_in_day, sorted_sequence_loss, linestyle='-', linewidth=0.5)
+    plt.xlabel('Seconds into the Day')
+    plt.ylabel('Sequence Loss')
+    plt.title('Sequence Loss vs. Time of Day')
+    plt.legend()
+    plt.show()
+    plt.xlim(0, 86400)
+    plt.grid(True)
     plt.savefig(name, bbox_inches='tight')
 
 

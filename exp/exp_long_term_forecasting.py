@@ -1,10 +1,11 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from utils.tools import EarlyStopping, adjust_learning_rate, visual
+from utils.tools import EarlyStopping, adjust_learning_rate, visual, loss_visual
 from utils.metrics import metric
 import torch
 import torch.nn as nn
 from torch import optim
+import csv
 import os
 import time
 import warnings
@@ -182,6 +183,14 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         folder_path = './test_results/' + setting + '/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
+        else: # Force output into new folder
+            i = 1
+            folder_path = './test_results/' + setting + str(i) + '/'
+            while os.path.exists(folder_path):
+                i = i + 1
+                folder_path = './test_results/' + setting + str(i) + '/'
+            os.makedirs(folder_path)
+
         loss_visual(train_loss_pts, val_loss_pts, os.path.join(folder_path, 'loss_plot.pdf'))
 
         return self.model
@@ -199,6 +208,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             os.makedirs(folder_path)
 
         self.model.eval()
+        batch_mse = []
         with torch.no_grad():
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(test_loader):
                 batch_x = batch_x.float().to(self.device)
@@ -247,6 +257,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
                 preds.append(pred)
                 trues.append(true)
+
+                mse_for_batch = metric(pred[0, :, -1], true[0, :, -1])[1]
+                for j in range(len(batch_x_mark[0, :, -1])):
+                    batch_mse.append([batch_x_mark[0, j, 0].item(), mse_for_batch])
+
                 if i % 20 == 0:
                     input = batch_x.detach().cpu().numpy()
                     if test_data.scale and self.args.inverse:
@@ -270,6 +285,13 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         # result save
         folder_path = './results/' + setting + '/'
         if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+        else: # Force output into new folder
+            i = 1
+            folder_path = './test_results/' + setting + str(i) + '/'
+            while os.path.exists(folder_path):
+                i = i + 1
+                folder_path = './test_results/' + setting + str(i) + '/'
             os.makedirs(folder_path)
         
         # dtw calculation
@@ -295,6 +317,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         f.write('mse:{}, mae:{}, dtw:{}'.format(mse, mae, dtw))
         f.write('\n')
         f.write('\n')
+        f.close()
+
+        f = open(folder_path + "loss_into_day.csv", 'w', newline='')
+        writer = csv.writer(f)
+        writer.writerows(batch_mse)
         f.close()
 
         np.save(folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe]))

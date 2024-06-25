@@ -79,7 +79,7 @@ class Dataset_ETT_hour(Dataset):
             data_stamp = df_stamp.drop(['date'], 1).values
         elif self.timeenc == 1:
             data_stamp = time_features(pd.to_datetime(df_stamp['date'].values), freq=self.freq)
-            data_stamp = data_stamp.transpose(1, 0) 
+            data_stamp = data_stamp.transpose(1, 0)
 
         self.data_x = data[border1:border2]
         self.data_y = data[border1:border2]
@@ -775,7 +775,7 @@ class Dataset_EURUSD_minute(Dataset):
         self.__read_data__()
 
     def __read_data__(self):
-        self.scaler = MinMaxScaler()
+        self.scaler = StandardScaler()
         data_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
         # TODO: Remove when data format is standardized
         #data_raw.columns = ['TICKER', 'DTYYYYMMDD', 'TIME', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'VOL']
@@ -804,7 +804,6 @@ class Dataset_EURUSD_minute(Dataset):
         cols.remove(self.target)
         cols.remove('date')
 
-        print
         data_raw = data_raw[['date'] + cols + [self.target]]
 
         # Sequence into train/val/test
@@ -827,8 +826,19 @@ class Dataset_EURUSD_minute(Dataset):
             data = data_f.values
 
         data_stamp = data_raw[['date']][border1:border2]
-        data_stamp = time_features(pd.to_datetime(data_stamp['date'].values), freq=self.freq)
-        data_stamp = data_stamp.transpose(1, 0)
+        #data_stamp['date'] = pd.to_datetime(data_stamp.date)
+        
+        if self.timeenc == 1:
+            data_stamp = time_features(pd.to_datetime(data_stamp['date'].values), freq=self.freq)
+            data_stamp = data_stamp.transpose(1, 0)
+        else:
+            # Slightly Fudge the embedding since we work on a smaller timescale
+            data_stamp['minute'] = data_stamp.date.apply(lambda row: row.minute, 1)
+            data_stamp['hour'] = data_stamp.date.apply(lambda row: row.hour, 1)
+            data_stamp['day'] = data_stamp.date.apply(lambda row: row.day, 1)
+            data_stamp['weekday'] = data_stamp.date.apply(lambda row: row.weekday(), 1)
+            data_stamp['month'] = data_stamp.date.apply(lambda row: row.month, 1)
+            data_stamp = data_stamp.drop(['date'], axis=1).values
 
         self.data_x = data[border1:border2]
         self.data_y = data[border1:border2]
