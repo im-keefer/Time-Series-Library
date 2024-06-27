@@ -945,7 +945,7 @@ class Dataset_NASDAQ_minute(Dataset):
         #data_stamp['date'] = pd.to_datetime(data_stamp.date)
         
         if self.timeenc == 1:
-            data_stamp = time_features(pd.to_datetime(data_stamp['date'].values), freq=self.freq)
+            data_stamp = time_features(pd.to_datetime(data_stamp['date'].values, utc=True), freq=self.freq)
             data_stamp = data_stamp.transpose(1, 0)
         else:
             # Slightly Fudge the embedding since we work on a smaller timescale
