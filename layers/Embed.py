@@ -67,9 +67,9 @@ class TemporalEmbedding(nn.Module):
     def __init__(self, d_model, embed_type='fixed', freq='h'):
         super(TemporalEmbedding, self).__init__()
 
-        minute_size = 4
+        minute_size = 60
         hour_size = 24
-        weekday_size = 7
+        weekday_size = 5
         day_size = 32
         month_size = 13
 

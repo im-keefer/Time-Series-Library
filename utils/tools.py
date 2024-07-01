@@ -83,15 +83,15 @@ def visual(true, preds=None, name='./pic/test.pdf'):
     Results visualization
     """
     plt.figure()
-    plt.xlabel('Time Steps')
+    plt.xlabel('Time Step')
     plt.ylabel('Value')
     x_input = range((len(true))//2)
     x_target = range(len(true)//2, len(true))
     plt.plot(x_input, true[:(len(true)//2)], label='Input Sequence', linewidth=2)
-    plt.plot(x_target, true[len(true)//2:], label='Output Sequence', linewidth=2)
+    plt.plot(x_target, true[len(true)//2:], label='Target Sequence', linewidth=2)
     #plot.plot(true, label='Ground Truth', linewidth=2)
     if preds is not None:
-        plt.plot(x_target, preds[len(preds)//2:], label='Prediction', linewidth=2)
+        plt.plot(x_target, preds[len(preds)//2:], label='Output Sequence', linewidth=2)
         #plt.plot(preds, label='Prediction', linewidth=2)
     plt.legend()
     plt.savefig(name, bbox_inches='tight')
