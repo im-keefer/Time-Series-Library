@@ -87,3 +87,17 @@ class mase_loss(nn.Module):
         masep = t.mean(t.abs(insample[:, freq:] - insample[:, :-freq]), dim=1)
         masked_masep_inv = divide_no_nan(mask, masep[:, None])
         return t.mean(t.abs(target - forecast) * masked_masep_inv)
+
+
+class vmse_loss(nn.Module):
+    def __init__(self):
+        super(vmse_loss, self).__init__()
+        self.mse = nn.MSELoss()
+
+    def forward(self, insample: t.Tensor, freq: int,
+                forecast: t.Tensor, target: t.Tensor, mask: t.Tensor) -> t.float:
+        """
+        Adds together MSE and the absolute difference of the standard deviations
+        of the forecast and target tensors
+        """
+        return t.sqrt(self.mse(insample, freq, forecast, target, mask)) + t.abs(t.std(target) - t.std(forecast))

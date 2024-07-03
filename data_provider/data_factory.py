@@ -1,5 +1,5 @@
 from data_provider.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_M4, PSMSegLoader, \
-    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, Dataset_EURUSD_minute, Dataset_NASDAQ_minute, Dataset_Gold_minute
+    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, Dataset_EURUSD_minute, Dataset_NASDAQ_minute, Dataset_Gold_minute, Dataset_Stock_Multi_minute
 from data_provider.uea import collate_fn
 from torch.utils.data import DataLoader
 
@@ -19,6 +19,7 @@ data_dict = {
     'eurusd' : Dataset_EURUSD_minute,
     'nasdaq' : Dataset_NASDAQ_minute,
     'gold' : Dataset_Gold_minute,
+    'stockmulti' : Dataset_Stock_Multi_minute,
 }
 
 
