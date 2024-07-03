@@ -68,7 +68,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
                     else:
                         outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
-                f_dim = -1 if self.args.features == 'MS' else 0
+                f_dim = -1 if (self.args.features == 'MS' or self.args.features == 'MT') else 0
                 outputs = outputs[:, -self.args.pred_len:, f_dim:]
                 batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
 
@@ -130,7 +130,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         else:
                             outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
 
-                        f_dim = -1 if self.args.features == 'MS' else 0
+                        f_dim = -1 if (self.args.features == 'MS' or self.args.features == 'MT') else 0
                         outputs = outputs[:, -self.args.pred_len:, f_dim:]
                         batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
                         loss = criterion(outputs, batch_y)
@@ -141,7 +141,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     else:
                         outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
 
-                    f_dim = -1 if self.args.features == 'MS' else 0
+                    f_dim = -1 if (self.args.features == 'MS' or self.args.features == 'MT') else 0
                     outputs = outputs[:, -self.args.pred_len:, f_dim:]
                     batch_y = batch_y[:, -self.args.pred_len:, f_dim:].to(self.device)
                     loss = criterion(outputs, batch_y)
@@ -237,7 +237,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     else:
                         outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
 
-                f_dim = -1 if self.args.features == 'MS' else 0
+                f_dim = -1 if (self.args.features == 'MS' or self.args.features == 'MT') else 0
                 outputs = outputs[:, -self.args.pred_len:, :]
                 batch_y = batch_y[:, -self.args.pred_len:, :].to(self.device)
                 outputs = outputs.detach().cpu().numpy()

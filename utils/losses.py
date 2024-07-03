@@ -94,10 +94,9 @@ class vmse_loss(nn.Module):
         super(vmse_loss, self).__init__()
         self.mse = nn.MSELoss()
 
-    def forward(self, insample: t.Tensor, freq: int,
-                forecast: t.Tensor, target: t.Tensor, mask: t.Tensor) -> t.float:
+    def forward(self, forecast: t.Tensor, target: t.Tensor) -> t.float:
         """
         Adds together MSE and the absolute difference of the standard deviations
         of the forecast and target tensors
         """
-        return t.sqrt(self.mse(insample, freq, forecast, target, mask)) + t.abs(t.std(target) - t.std(forecast))
+        return t.sqrt(self.mse(forecast, target)) + t.abs(t.std(target) - t.std(forecast))
