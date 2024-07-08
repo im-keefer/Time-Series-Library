@@ -89,6 +89,18 @@ class mase_loss(nn.Module):
         return t.mean(t.abs(target - forecast) * masked_masep_inv)
 
 
+class vrmse_loss(nn.Module):
+    def __init__(self):
+        super(vrmse_loss, self).__init__()
+        self.mse = nn.MSELoss()
+
+    def forward(self, forecast: t.Tensor, target: t.Tensor) -> t.float:
+        """
+        Adds together RMSE and the absolute difference of the standard deviations
+        of the forecast and target tensors
+        """
+        return t.sqrt(self.mse(forecast, target)) + t.abs(t.std(target) - t.std(forecast))
+
 class vmse_loss(nn.Module):
     def __init__(self):
         super(vmse_loss, self).__init__()
@@ -96,7 +108,7 @@ class vmse_loss(nn.Module):
 
     def forward(self, forecast: t.Tensor, target: t.Tensor) -> t.float:
         """
-        Adds together MSE and the absolute difference of the standard deviations
+        Adds together MSE and the squared difference of the standard deviations
         of the forecast and target tensors
         """
-        return t.sqrt(self.mse(forecast, target)) + t.abs(t.std(target) - t.std(forecast))
+        return self.mse(forecast, target) + t.square(t.std(target) - t.std(forecast))

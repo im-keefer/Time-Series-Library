@@ -1,7 +1,7 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjust_learning_rate, visual, loss_visual
-from utils.losses import vmse_loss
+from utils.losses import vrmse_loss, vmse_loss
 from utils.metrics import metric
 import torch
 import torch.nn as nn
@@ -39,6 +39,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
     def _select_criterion(self, loss_name):
         if loss_name == 'MSE':
             return nn.MSELoss()
+        elif loss_name == 'VRMSE':
+            return vrmse_loss()
         elif loss_name == 'VMSE':
             return vmse_loss()
 

@@ -1008,7 +1008,7 @@ class Dataset_Gold_minute(Dataset):
 
         # Convert int
         #data_raw['date'] = (data_raw['DATETIME'].astype(np.int64) // 10**9)
-        data_raw['date'] = pd.to_datetime(data_raw['Date'].astype(str) + data_raw['Time'].astype(str), format="%Y.%m.%d%H:%M")
+        data_raw['date'] = pd.to_datetime(data_raw['Date'].astype(str), format="%Y.%m.%d%H:%M")
 
         # Check for unique timestamps
         unique_timestamps = data_raw['date'].nunique()
