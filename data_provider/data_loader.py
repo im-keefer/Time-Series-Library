@@ -12,6 +12,7 @@ from data_provider.uea import subsample, interpolate_missing, Normalizer
 from sktime.datasets import load_from_tsfile_to_dataframe
 import warnings
 from utils.augmentation import run_augmentation_single
+from joblib import dump
 
 warnings.filterwarnings('ignore')
 
@@ -817,6 +818,8 @@ class Dataset_EURUSD_minute(Dataset):
             train_data = data_f[border1s[0]:border2s[0]]
             self.scaler.fit(train_data.values)
             data = self.scaler.transform(data_f.values)
+            if self.set_type == 0:
+                dump(self.scaler, (self.data_path + "_train_scaler.bin"), compress=True)
         else:
             data = data_f.values
 
@@ -829,11 +832,11 @@ class Dataset_EURUSD_minute(Dataset):
         else:
             # Slightly Fudge the embedding since we work on a smaller timescale
             data_stamp['date'] = pd.to_datetime(data_stamp.date)
-            data_stamp['minute'] = data_stamp.date.apply(lambda row: row.minute, 1)
-            data_stamp['hour'] = data_stamp.date.apply(lambda row: row.hour, 1)
+            data_stamp['month'] = data_stamp.date.apply(lambda row: row.month, 1)
             data_stamp['day'] = data_stamp.date.apply(lambda row: row.day, 1)
             data_stamp['weekday'] = data_stamp.date.apply(lambda row: row.weekday(), 1)
-            data_stamp['month'] = data_stamp.date.apply(lambda row: row.month, 1)
+            data_stamp['hour'] = data_stamp.date.apply(lambda row: row.hour, 1)
+            data_stamp['minute'] = data_stamp.date.apply(lambda row: row.minute, 1)
             data_stamp = data_stamp.drop(['date'], axis=1).values
 
         self.data_x = data[border1:border2]
@@ -928,6 +931,8 @@ class Dataset_NASDAQ_minute(Dataset):
             train_data = data_f[border1s[0]:border2s[0]]
             self.scaler.fit(train_data.values)
             data = self.scaler.transform(data_f.values)
+            if self.set_type == 0:
+                dump(self.scaler, (self.data_path + "_train_scaler.bin"), compress=True)
         else:
             data = data_f.values
 
@@ -940,11 +945,11 @@ class Dataset_NASDAQ_minute(Dataset):
         else:
             # Slightly Fudge the embedding since we work on a smaller timescale
             #data_stamp['date'] = pd.to_datetime(data_stamp.date)
-            data_stamp['minute'] = data_stamp.date.apply(lambda row: row.minute, 1)
-            data_stamp['hour'] = data_stamp.date.apply(lambda row: row.hour, 1)
+            data_stamp['month'] = data_stamp.date.apply(lambda row: row.month, 1)
             data_stamp['day'] = data_stamp.date.apply(lambda row: row.day, 1)
             data_stamp['weekday'] = data_stamp.date.apply(lambda row: row.weekday(), 1)
-            data_stamp['month'] = data_stamp.date.apply(lambda row: row.month, 1)
+            data_stamp['hour'] = data_stamp.date.apply(lambda row: row.hour, 1)
+            data_stamp['minute'] = data_stamp.date.apply(lambda row: row.minute, 1)
             data_stamp = data_stamp.drop(['date'], axis=1).values
 
         self.data_x = data[border1:border2]
@@ -1039,6 +1044,8 @@ class Dataset_Gold_minute(Dataset):
             train_data = data_f[border1s[0]:border2s[0]]
             self.scaler.fit(train_data.values)
             data = self.scaler.transform(data_f.values)
+            if self.set_type == 0:
+                dump(self.scaler, (self.data_path + "_train_scaler.bin"), compress=True)
         else:
             data = data_f.values
 
@@ -1051,11 +1058,11 @@ class Dataset_Gold_minute(Dataset):
         else:
             # Slightly Fudge the embedding since we work on a smaller timescale
             #data_stamp['date'] = pd.to_datetime(data_stamp.date)
-            data_stamp['minute'] = data_stamp.date.apply(lambda row: row.minute, 1)
-            data_stamp['hour'] = data_stamp.date.apply(lambda row: row.hour, 1)
+            data_stamp['month'] = data_stamp.date.apply(lambda row: row.month, 1)
             data_stamp['day'] = data_stamp.date.apply(lambda row: row.day, 1)
             data_stamp['weekday'] = data_stamp.date.apply(lambda row: row.weekday(), 1)
-            data_stamp['month'] = data_stamp.date.apply(lambda row: row.month, 1)
+            data_stamp['hour'] = data_stamp.date.apply(lambda row: row.hour, 1)
+            data_stamp['minute'] = data_stamp.date.apply(lambda row: row.minute, 1)
             data_stamp = data_stamp.drop(['date'], axis=1).values
 
         self.data_x = data[border1:border2]
@@ -1147,6 +1154,8 @@ class Dataset_Stock_Multi_minute(Dataset):
             train_data = data_f[border1s[0]:border2s[0]]
             self.scaler.fit(train_data.values)
             data = self.scaler.transform(data_f.values)
+            if self.set_type == 0:
+                dump(self.scaler, (self.data_path + "_train_scaler.bin"), compress=True)
         else:
             data = data_f.values
 

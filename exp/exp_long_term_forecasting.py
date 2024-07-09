@@ -174,7 +174,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
             train_loss_pts.append(train_loss)
             val_loss_pts.append(vali_loss)
-            early_stopping(vali_loss, self.model, path)
+            early_stopping(vali_loss, self.model, model_optim, path)
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
