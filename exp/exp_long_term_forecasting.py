@@ -1,3 +1,6 @@
+import datetime
+import pandas as pd
+import pytz
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.tools import EarlyStopping, adjust_learning_rate, visual, loss_visual
@@ -48,7 +51,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         total_loss = []
         self.model.eval()
         with torch.no_grad():
-            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(vali_loader):
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark, batch_x_stamp, batch_y_stamp) in enumerate(vali_loader):
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float()
 
@@ -112,7 +115,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
             self.model.train()
             epoch_time = time.time()
-            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(train_loader):
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark, batch_x_stamp, batch_y_stamp) in enumerate(train_loader):
+                print('a', batch_x.shape)
+                print('b', batch_x_mark.shape)
+                print('c', batch_y.shape)
+                print('c', batch_y_mark.shape)
                 iter_count += 1
                 model_optim.zero_grad()
                 batch_x = batch_x.float().to(self.device)
@@ -215,7 +222,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         self.model.eval()
         batch_mse = []
         with torch.no_grad():
-            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(test_loader):
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark, batch_x_stamp, batch_y_stamp) in enumerate(test_loader):
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float().to(self.device)
 
@@ -320,5 +327,160 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         np.save(self.folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe]))
         np.save(self.folder_path + 'pred.npy', preds)
         np.save(self.folder_path + 'true.npy', trues)
+
+        return
+
+    def inference(self, setting, inference_path, data_path):
+        test_data, test_loader = self._get_data(flag='inference')
+        print('device: ', self.device)
+        print('loading model', inference_path)
+        self.model.load_state_dict(torch.load(inference_path, map_location=torch.device(self.device)))
+        self.model.to(self.device)
+
+        preds = []
+        trues = []
+        stamps = []
+
+        self.folder_path = './inference_results/' + setting + '/'
+        if not os.path.exists(self.folder_path):
+            os.makedirs(self.folder_path)
+        else: # Force output into new folder
+            i = 1
+            self.folder_path = './inference_results/' + setting + str(i) + '/'
+            while os.path.exists(self.folder_path):
+                i = i + 1
+                self.folder_path = './inference_results/' + setting + str(i) + '/'
+            os.makedirs(self.folder_path)
+
+        self.model.eval()
+        with torch.no_grad():
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark, batch_x_stamp, batch_y_stamp) in enumerate(test_loader):
+
+                batch_x = batch_x.float().to(self.device)
+                batch_y = batch_y.float().to(self.device)
+
+                batch_x_mark = batch_x_mark.float().to(self.device)
+                batch_y_mark = batch_y_mark.float().to(self.device)
+
+                # decoder input
+                dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
+                dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
+                # encoder - decoder
+                if self.args.use_amp:
+                    with torch.cuda.amp.autocast():
+                        if self.args.output_attention:
+                            outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
+                        else:
+                            outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+                else:
+                    if self.args.output_attention:
+                        outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
+
+                    else:
+                        outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+
+                f_dim = -1 if (self.args.features == 'MS' or self.args.features == 'MT') else 0
+                outputs = outputs[:, -self.args.pred_len:, :]
+                batch_y = batch_y[:, -self.args.pred_len:, :].to(self.device)
+                outputs = outputs.detach().cpu().numpy()
+                batch_y = batch_y.detach().cpu().numpy()
+                if test_data.scale and self.args.inverse:
+                    shape = outputs.shape
+                    if shape[0] == 1:
+                        outputs = test_data.inverse_transform(outputs.squeeze(0)).reshape(shape)
+                        batch_y = test_data.inverse_transform(batch_y.squeeze(0)).reshape(shape)
+                    else: # We have multiple batches, inverse them all why not
+                        for j in range(shape[0]):
+                            outputs[j] = test_data.inverse_transform(outputs[j]).reshape(outputs[j].shape)
+                            batch_y[j] = test_data.inverse_transform(batch_y[j]).reshape(outputs[j].shape)
+        
+                outputs = outputs[:, :, f_dim:]
+                batch_y = batch_y[:, :, f_dim:]
+
+                pred = outputs
+                true = batch_y
+                stamp = batch_y_stamp[:, -self.args.pred_len:]
+                stamp2 = batch_y_stamp
+                #print('stamp2: ', stamp2.shape)
+                if i == 0:
+                    torch.set_printoptions(precision=9, sci_mode=False)
+                    print('stamp2: ', stamp2)
+                    print('a: ', stamp2[0][0], stamp2[0][-50:])
+
+                preds.append(pred)
+                trues.append(true)
+                stamps.append(stamp)
+                if False and (i == 0 or (i > 2329 and i < 2335)):
+                    print('[0]: ', i+2, '|   ', stamp[0][0].item(), true[0][0][0], pred[0][0][0])
+                    print('[49]: ', i+2, '|   ', stamp[0][49].item(), true[0][49][0], pred[0][49][0])
+                    print('Finished inferencing batch ', i+1)
+
+        preds = np.array(preds)
+        trues = np.array(trues)
+        stamps = np.array(stamps, dtype=int)
+        print('test shape:', preds.shape, trues.shape, stamps.shape)
+
+        preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
+        trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
+        stamps = stamps.reshape(-1, stamps.shape[-1])
+
+        preds = np.squeeze(preds, axis=-1)
+        trues = np.squeeze(trues, axis=-1)
+        print('test shape:', preds.shape, trues.shape, stamps.shape)
+        
+        flat_preds = preds.flatten()
+        flat_trues = trues.flatten()
+        flat_stamps = stamps.flatten().astype(int)
+        np.set_printoptions(precision=20)
+        print('pred, trues, stamps len: ', len(flat_preds), len(flat_trues), len(flat_stamps))
+
+        num_sequences, sequence_length = stamps.shape
+        distances = np.tile(np.arange(sequence_length, dtype=int), num_sequences).astype(int)
+
+        def unix_to_string(unix_timestamp):
+            # Define the timezone that handles daylight saving time (Eastern Time)
+            timezone = pytz.timezone('America/New_York')
+            
+            # Convert the Unix timestamp to a datetime object in UTC
+            dt_utc = datetime.datetime.fromtimestamp(unix_timestamp, tz=datetime.timezone.utc)
+            
+            # Convert the datetime object to the specified timezone, which handles DST
+            dt_local = dt_utc.astimezone(timezone)
+            
+            # Format the datetime object to the desired string format
+            dt_str = dt_local.strftime("%d.%m.%Y %H:%M:%S.%f")[:-3]  # Trim to milliseconds
+            timezone_str = dt_local.strftime(" GMT%z")
+            
+            # Create the final formatted string
+            formatted_string = f"{dt_str}{timezone_str}"
+            
+            return formatted_string
+        
+        vectorized_unix_to_string = np.vectorize(unix_to_string)
+        formatted_stamps = vectorized_unix_to_string(flat_stamps)
+
+        data_csv_df = pd.read_csv(data_path)
+
+        open_values = data_csv_df[data_csv_df['Local time'].isin(formatted_stamps)]['Open'].values
+        not_in_values = data_csv_df[~data_csv_df['Local time'].isin(formatted_stamps)]['Open'].values
+
+        print('open', len(open_values), len(not_in_values), len(data_csv_df))
+        #print('a', )
+        #print('b', data_csv_df['Local time'].iloc[0], 
+        #    data_csv_df[data_csv_df['Local time'].isin(formatted_stamps)]['Open'].iloc[0], 
+        #    data_csv_df[~data_csv_df['Local time'].isin(formatted_stamps)]['Open'].iloc[0])
+        print('flat_stamps', len(formatted_stamps), formatted_stamps[0])
+
+        df = pd.DataFrame({
+            'Timestamp': flat_stamps,
+            'True': open_values,
+            'Pred': flat_preds,
+            'Distance': distances
+        })
+
+
+        df.to_csv(self.folder_path + 'results.csv', index=False)
+
+        print(f"CSV written to {self.folder_path + 'results.csv'}")
 
         return
