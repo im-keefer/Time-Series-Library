@@ -1,3 +1,4 @@
+import math
 import os
 import numpy as np
 import pandas as pd
@@ -876,15 +877,19 @@ class Dataset_NASDAQ_minute(Dataset):
             self.label_len = size[1]
             self.pred_len = size[2]
         # init
-        assert flag in ['train', 'test', 'val']
-        type_map = {'train': 0, 'val': 1, 'test': 2}
+        assert flag in ['train', 'test', 'val', 'inference']
+        type_map = {'train': 0, 'val': 1, 'test': 2, 'inference': 2} # used to set the data border
         self.set_type = type_map[flag]
+        self.is_inferencing = flag == 'inference'
+        print('type_map: ', self.set_type)
 
         self.features = features
         self.target = target
         self.scale = scale
         self.timeenc = timeenc
         self.freq = freq
+
+        self.is_first = True # added for printing loop. can delete otherwise
 
         self.root_path = root_path
         self.data_path = data_path
@@ -901,19 +906,22 @@ class Dataset_NASDAQ_minute(Dataset):
         # Convert int
         #data_raw['date'] = (data_raw['DATETIME'].astype(np.int64) // 10**9)
         data_raw['date'] = pd.to_datetime(data_raw['Local time'].astype(str), format="%d.%m.%Y %H:%M:%S.%f GMT%z")
+        data_raw['date'] = data_raw['date'].apply(lambda x: x.tz_convert('UTC').tz_localize(None) if x.tzinfo else x)
 
         # Check for unique timestamps
-        unique_timestamps = data_raw['date'].nunique()
-        total_timestamps = len(data_raw)
-        print(f"Unique Timestamps: {unique_timestamps}, Total Rows: {total_timestamps}")
+        #unique_timestamps = data_raw['date'].nunique()
+        #total_timestamps = len(data_raw)
+        #print(f"Unique Timestamps: {unique_timestamps}, Total Rows: {total_timestamps}")
 
-        print(data_raw['date'].head())
+        #print(data_raw['date'].head())
 
         cols = list(data_raw.columns)
         cols.remove(self.target)
         cols.remove('date')
 
         data_raw = data_raw[['date'] + cols + [self.target]]
+
+        print('data_raw: ', len(data_raw))
 
         # Sequence into train/val/test
         num_train = int(len(data_raw) * 0.5)
@@ -923,6 +931,9 @@ class Dataset_NASDAQ_minute(Dataset):
         border2s = [num_train, num_train + num_vali, len(data_raw)]
         border1 = border1s[self.set_type]
         border2 = border2s[self.set_type]
+
+        print('border1s: ', border1s)
+        print('border2s: ', border2s)
 
         if self.features == 'T': # Minute
             data_f = data_raw[[self.target]]
@@ -938,7 +949,9 @@ class Dataset_NASDAQ_minute(Dataset):
 
         data_stamp = data_raw[['date']][border1:border2]
         #data_stamp['date'] = pd.to_datetime(data_stamp.date)
-        
+        #self.data_stamp_orig = data_stamp.copy(deep=True)
+        self.data_stamp_orig = pd.to_datetime(data_stamp.date)
+
         if self.timeenc == 1:
             data_stamp = time_features(pd.to_datetime(data_stamp['date'].values, utc=True), freq=self.freq)
             data_stamp = data_stamp.transpose(1, 0)
@@ -958,20 +971,58 @@ class Dataset_NASDAQ_minute(Dataset):
         self.data_stamp = data_stamp
 
     def __getitem__(self, index):
-        s_begin = index
-        s_end = s_begin + self.seq_len
-        r_begin = s_end - self.label_len
-        r_end = r_begin + self.label_len + self.pred_len
+        if not self.is_inferencing:
+            s_begin = index
+            s_end = s_begin + self.seq_len
+            r_begin = s_end - self.label_len
+            r_end = r_begin + self.label_len + self.pred_len
 
-        seq_x = self.data_x[s_begin:s_end]
-        seq_y = self.data_y[r_begin:r_end]
-        seq_x_mark = self.data_stamp[s_begin:s_end]
-        seq_y_mark = self.data_stamp[r_begin:r_end]
+            seq_x = self.data_x[s_begin:s_end]
+            seq_y = self.data_y[r_begin:r_end]
+            seq_x_mark = self.data_stamp[s_begin:s_end]
+            seq_y_mark = self.data_stamp[r_begin:r_end]
 
-        return seq_x, seq_y, seq_x_mark, seq_y_mark
+            seq_x_data_stamp_orig = self.data_stamp_orig[s_begin:s_end]
+            seq_y_data_stamp_orig = self.data_stamp_orig[r_begin:r_end]
+
+            seq_x_data_stamp_orig = np.array([x.timestamp() for x in seq_x_data_stamp_orig])
+            seq_y_data_stamp_orig = np.array([y.timestamp() for y in seq_y_data_stamp_orig])
+
+            if self.is_first and False:
+                print('a', seq_x[0], flush=True)
+                self.is_first = False
+
+            return seq_x, seq_y, seq_x_mark, seq_y_mark, seq_x_data_stamp_orig, seq_y_data_stamp_orig
+        else: # self.is_inferencing == True
+            s_begin =  index * self.seq_len
+            s_end = s_begin + self.seq_len
+            r_begin = s_end - self.label_len
+            r_end = r_begin + self.label_len + self.pred_len
+
+            seq_x = self.data_x[s_begin:s_end]
+            seq_y = self.data_y[r_begin:r_end]
+            seq_x_mark = self.data_stamp[s_begin:s_end]
+            seq_y_mark = self.data_stamp[r_begin:r_end]
+
+            seq_x_data_stamp_orig = self.data_stamp_orig[s_begin:s_end]
+            seq_y_data_stamp_orig = self.data_stamp_orig[r_begin:r_end]
+
+            seq_x_data_stamp_orig = np.array([x.timestamp() for x in seq_x_data_stamp_orig])
+            seq_y_data_stamp_orig = np.array([y.timestamp() for y in seq_y_data_stamp_orig])
+
+            if self.is_first and False:
+                print('a', seq_x[0], flush=True)
+                self.is_first = False
+
+            return seq_x, seq_y, seq_x_mark, seq_y_mark, seq_x_data_stamp_orig, seq_y_data_stamp_orig
+
 
     def __len__(self):
-        return len(self.data_x) - self.seq_len - self.pred_len + 1
+        if not self.is_inferencing:
+            return len(self.data_x) - self.seq_len - self.pred_len + 1
+        else: # self.is_inferencing == True
+            return math.floor((len(self.data_x) - self.seq_len) / self.pred_len)
+
 
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
