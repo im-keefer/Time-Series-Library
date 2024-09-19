@@ -36,14 +36,14 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         return data_set, data_loader
 
     def _select_optimizer(self):
-        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
+        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate, betas=(self.args.beta1, self.args.beta2), eps=self.args.eps)
         return model_optim
 
     def _select_criterion(self, loss_name):
         if loss_name == 'MSE':
             return nn.MSELoss()
         elif loss_name == 'VRMSE':
-            return vrmse_loss()
+            return vrmse_loss(scale=self.args.vrmse_loss_scale)
         elif loss_name == 'VMSE':
             return vmse_loss()
 
@@ -116,10 +116,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             self.model.train()
             epoch_time = time.time()
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark, batch_x_stamp, batch_y_stamp) in enumerate(train_loader):
+                '''
                 print('a', batch_x.shape)
                 print('b', batch_x_mark.shape)
                 print('c', batch_y.shape)
                 print('c', batch_y_mark.shape)
+                '''
                 iter_count += 1
                 model_optim.zero_grad()
                 batch_x = batch_x.float().to(self.device)

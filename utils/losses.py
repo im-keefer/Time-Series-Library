@@ -90,16 +90,17 @@ class mase_loss(nn.Module):
 
 
 class vrmse_loss(nn.Module):
-    def __init__(self):
+    def __init__(self, scale=1):
         super(vrmse_loss, self).__init__()
         self.mse = nn.MSELoss()
+        self.vscale = scale
 
     def forward(self, forecast: t.Tensor, target: t.Tensor) -> t.float:
         """
         Adds together RMSE and the absolute difference of the standard deviations
         of the forecast and target tensors
         """
-        return t.sqrt(self.mse(forecast, target)) + t.abs(t.std(target) - t.std(forecast))
+        return t.sqrt(self.mse(forecast, target)) + self.vscale*(t.abs(t.std(target) - t.std(forecast)))
 
 class vmse_loss(nn.Module):
     def __init__(self):
