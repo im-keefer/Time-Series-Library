@@ -1,0 +1,91 @@
+BETA 1 Tests
+
+0.9 (Default)
+long_term_forecast_NASDAQ_B1T1_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:5956.947265625, mae:71.60655212402344, dtw:-999, 12 Epochs
+
+0.85
+long_term_forecast_NASDAQ_B1T2_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:7957.0361328125, mae:83.77521514892578, dtw:-999, 10 Epochs
+
+##0.8
+##long_term_forecast_NASDAQ_B1T3_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+##mse:2832.1259765625, mae:29.306421279907227, dtw:-999, 6 Epochs
+
+0.75
+long_term_forecast_NASDAQ_B1T4_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:6061.49658203125, mae:40.62788009643555, dtw:-999, 5 Epochs
+
+0.7
+long_term_forecast_NASDAQ_B1T5_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:5703.25634765625, mae:64.70677185058594, dtw:-999, 6 Epochs
+
+0.65
+long_term_forecast_NASDAQ_B1T6_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:10194.2734375, mae:91.18608856201172, dtw:-999, 4 Epochs
+
+0.6
+long_term_forecast_NASDAQ_B1T7_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:4014.8359375, mae:48.52996826171875, dtw:-999, 4 Epochs
+
+
+BETA 2 Tests
+
+0.999 (Default)
+long_term_forecast_NASDAQ_B2T1_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:5957.2265625, mae:71.60865783691406, dtw:-999, 12 Epochs
+
+#0.985
+#long_term_forecast_NASDAQ_B2T2_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+#mse:4392.83740234375, mae:32.86941146850586, dtw:-999, 5 Epochs
+
+0.980
+long_term_forecast_NASDAQ_B2T3_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:4933.27099609375, mae:42.450408935546875, dtw:-999, 5 Epochs
+
+0.975
+long_term_forecast_NASDAQ_B2T4_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:5367.1982421875, mae:50.266990661621094, dtw:-999, 5 Epochs
+
+0.970
+long_term_forecast_NASDAQ_B2T5_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:4405.82275390625, mae:35.69810485839844, dtw:-999, 5 Epochs
+
+0.965
+long_term_forecast_NASDAQ_B2T6_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:3500.1630859375, mae:52.737613677978516, dtw:-999, 12 Epochs
+
+0.899
+long_term_forecast_NASDAQ_B2T7_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:5592.52734375, mae:63.92249298095703, dtw:-999, 6 Epochs
+
+
+EPSILON Tests
+
+1e-8 (Default)
+long_term_forecast_NASDAQ_EPT1_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:5957.6298828125, mae:71.61167907714844, dtw:-999, 12 Epochs
+
+1e-9
+long_term_forecast_NASDAQ_EPT2_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:5970.5107421875, mae:71.7003173828125, dtw:-999, 12 Epochs
+
+1e-10
+long_term_forecast_NASDAQ_EPT3_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:5972.40478515625, mae:71.71404266357422, dtw:-999, 12 Epochs
+
+1e-11
+long_term_forecast_NASDAQ_EPT4_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:5972.53125, mae:71.71441650390625, dtw:-999, 12 Epochs
+
+1e-7
+long_term_forecast_NASDAQ_EPT5_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:5935.4052734375, mae:71.43179321289062, dtw:-999, 12 Epochs
+
+1e-6
+long_term_forecast_NASDAQ_EPT6_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+mse:6066.5078125, mae:72.2693099975586, dtw:-999, 12 Epochs
+
+#1e-5
+#long_term_forecast_NASDAQ_EPT7_50_50_Transformer_nasdaq_ftT_sl50_ll25_pl50_dm512_nh8_el2_dl1_df2048_expand2_dc4_fc3_ebfixed_dtTrue_'Exp'_0  
+#mse:4357.8642578125, mae:45.95981216430664, dtw:-999, 5 Epochs

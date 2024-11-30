@@ -992,7 +992,7 @@ class Dataset_NASDAQ_minute(Dataset):
                 print('a', seq_x[0], flush=True)
                 self.is_first = False
 
-            return seq_x, seq_y, seq_x_mark, seq_y_mark, seq_x_data_stamp_orig, seq_y_data_stamp_orig
+            return seq_x, seq_y, seq_x_mark, seq_y_mark
         else: # self.is_inferencing == True
             s_begin =  index * self.seq_len
             s_end = s_begin + self.seq_len
@@ -1013,7 +1013,7 @@ class Dataset_NASDAQ_minute(Dataset):
             if self.is_first and False:
                 print('a', seq_x[0], flush=True)
                 self.is_first = False
-
+            
             return seq_x, seq_y, seq_x_mark, seq_y_mark, seq_x_data_stamp_orig, seq_y_data_stamp_orig
 
 
